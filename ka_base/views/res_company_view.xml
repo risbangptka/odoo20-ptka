@@ -1,0 +1,23 @@
+<odoo>
+    <record id="view_ka_company_form" model="ir.ui.view">
+        <field name="name">ka_base.res.company.form</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <!-- KB-04: user R/K dan automated kini editable karena tidak lagi berdefault superuser.
+                 partner_id di Odoo 20 sudah readonly + group_no_one, jadi tidak perlu dipindah lagi -->
+            <field name="partner_id" position="after">
+                <field name="code"/>
+            </field>
+            <xpath expr="//notebook" position="inside">
+                <page string="Setting R/K" name="ka_setting_rk" groups="base.group_no_one">
+                    <group>
+                        <field name="intercompany_user_id"/>
+                        <field name="automated_system_user_id"/>
+                        <field name="internal_user_id"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

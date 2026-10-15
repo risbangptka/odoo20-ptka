@@ -1,0 +1,13 @@
+<odoo>
+    <record id="view_ka_partner_form" model="ir.ui.view">
+        <field name="name">ka_base.res.partner.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- lang muncul 2x di form Odoo 20 (kedua di dalam child_ids); ambil yang pertama -->
+            <xpath expr="(//field[@name='lang'])[1]" position="after">
+                <field name="is_operating_unit" readonly="1" groups="base.group_no_one"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

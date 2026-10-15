@@ -1,0 +1,24 @@
+<odoo>
+    <record id="view_country_state_form_inherit_ka_base" model="ir.ui.view">
+        <field name="name">view.country.state.form.inherit.ka_base</field>
+        <field name="model">res.country.state</field>
+        <field name="inherit_id" ref="base.view_country_state_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group" position="before">
+                <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                <field name="active" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_country_state_search_inherit_ka_base" model="ir.ui.view">
+        <field name="name">view.country.state.search.inherit.ka_base</field>
+        <field name="model">res.country.state</field>
+        <field name="inherit_id" ref="base.view_country_state_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
