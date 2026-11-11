@@ -225,4 +225,25 @@
             (0, 0, {'view_mode': 'list', 'view_id': ref('view_pkat_product_list')}),
             (0, 0, {'view_mode': 'form', 'view_id': ref('view_pkat_product_form')})]"/>
     </record>
+
+
+    <!-- ===== Padanan satuan Odoo 10 -> Odoo 20 (V6) ===== -->
+    <record id="view_pkat_uom_map_list" model="ir.ui.view">
+        <field name="name">view.pkat.uom.map.list</field>
+        <field name="model">pkat.uom.map</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="ka10_id"/>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="uom_id"/>
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_pkat_uom_map" model="ir.actions.act_window">
+        <field name="name">Padanan Satuan</field>
+        <field name="res_model">pkat.uom.map</field>
+        <field name="view_mode">list</field>
+    </record>
 </odoo>

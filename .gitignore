@@ -5,3 +5,6 @@ __pycache__/
 
 # kredensial akun uji lokal
 *.local
+
+# ekspor master Odoo 10 (data perusahaan, tidak di-commit)
+ka_pkat/master_odoo10/

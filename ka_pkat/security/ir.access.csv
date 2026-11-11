@@ -48,3 +48,5 @@ access_pkat_change_request_line_anggaran_kd,pkat.change.request.line anggaran_kd
 access_pkat_budget_import_anggaran_kd,pkat.budget.import anggaran_kd,pkat.budget.import,ka_pkat.group_pkat_anggaran_kd,crud,
 access_account_account_pkat_anggaran_kd,account.account pkat anggaran_kd (lengkapi stasiun/bagian),account.account,ka_pkat.group_pkat_anggaran_kd,u,"[('pkat_managed', '=', True)]"
 access_hr_department_pkat_anggaran_kd,hr.department pkat anggaran_kd,hr.department,ka_pkat.group_pkat_anggaran_kd,u,
+access_pkat_uom_map_pengguna,pkat.uom.map pengguna,pkat.uom.map,ka_pkat.group_pkat_pengguna,r,
+access_pkat_uom_map_admin,pkat.uom.map admin,pkat.uom.map,ka_pkat.group_pkat_admin,crud,

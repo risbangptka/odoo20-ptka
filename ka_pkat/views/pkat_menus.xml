@@ -22,6 +22,7 @@
     <menuitem id="menu_pkat_account" name="Perkiraan" parent="menu_pkat_config_root" action="action_pkat_account" sequence="20"/>
     <menuitem id="menu_pkat_cost_center" name="Stasiun" parent="menu_pkat_config_root" action="action_pkat_cost_center" sequence="30"/>
     <menuitem id="menu_pkat_product" name="Barang" parent="menu_pkat_config_root" action="action_pkat_product" sequence="45"/>
+    <menuitem id="menu_pkat_uom_map" name="Padanan Satuan" parent="menu_pkat_config_root" action="action_pkat_uom_map" sequence="46" groups="ka_pkat.group_pkat_admin"/>
     <menuitem id="menu_pkat_department" name="Bagian / Seksi" parent="menu_pkat_config_root" action="action_pkat_department" sequence="40"/>
     <menuitem id="menu_pkat_api_token" name="Token API" parent="menu_pkat_config_root" action="action_pkat_api_token" sequence="50" groups="ka_pkat.group_pkat_admin"/>
 </odoo>
