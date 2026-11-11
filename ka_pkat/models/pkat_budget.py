@@ -118,6 +118,16 @@ class PkatBudgetLine(models.Model):
     _budget_account_uniq = models.Constraint(
         'unique(budget_id, account_id)', 'Perkiraan sudah ada pada PKAT stasiun ini.')
 
+    @api.constrains('account_id', 'budget_id')
+    def _check_account(self):
+        """FS-PK-09: perkiraan yang belum lengkap (tanpa stasiun/bagian) tidak dapat dianggarkan."""
+        for rec in self:
+            if rec.account_id.needs_completion:
+                raise ValidationError(_(
+                    "Perkiraan %(acc)s belum punya stasiun atau bagian. "
+                    "Lengkapi master perkiraan sebelum dianggarkan.",
+                    acc=rec.account_id.display_name))
+
     @api.depends('amount_goods', 'amount_nongoods', 'amount_wage', 'amount_project',
                  'shift_in', 'shift_out', 'amount_added')
     def _compute_amounts(self):

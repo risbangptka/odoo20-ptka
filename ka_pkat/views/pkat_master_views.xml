@@ -83,7 +83,7 @@
         <field name="name">view.pkat.account.list</field>
         <field name="model">pkat.account</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-warning="needs_completion">
                 <field name="code"/>
                 <field name="name"/>
                 <field name="cost_center_id"/>
@@ -92,8 +92,24 @@
                 <field name="wage_type"/>
                 <field name="kind"/>
                 <field name="is_spt"/>
+                <field name="needs_completion" optional="show"/>
                 <field name="company_id"/>
             </list>
+        </field>
+    </record>
+    <record id="view_pkat_account_search" model="ir.ui.view">
+        <field name="name">view.pkat.account.search</field>
+        <field name="model">pkat.account</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="cost_center_id"/>
+                <field name="department_id"/>
+                <!-- FS-PK-09 -->
+                <filter name="needs_completion" string="Perlu Dilengkapi" domain="[('needs_completion', '=', True)]"/>
+                <filter name="inactive" string="Diarsipkan" domain="[('active', '=', False)]"/>
+            </search>
         </field>
     </record>
     <record id="view_pkat_account_form" model="ir.ui.view">
@@ -102,6 +118,10 @@
         <field name="arch" type="xml">
             <form>
                 <sheet>
+                    <div class="alert alert-warning" role="alert" invisible="not needs_completion">
+                        Perkiraan ini belum punya stasiun atau bagian. Lengkapi dahulu agar dapat dianggarkan.
+                    </div>
+                    <field name="needs_completion" invisible="1"/>
                     <group>
                         <group>
                             <field name="code"/>

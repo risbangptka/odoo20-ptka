@@ -91,9 +91,18 @@ class PkatAccount(models.Model):
     is_spt = fields.Boolean('Anggaran Tebu SPT',
                             help="Tidak dikunci PKAT dan tidak ikut pergeseran (BRD PR-14, SW-05).")
     active = fields.Boolean(default=True)
+    needs_completion = fields.Boolean(
+        'Perlu Dilengkapi', compute='_compute_needs_completion', store=True, index=True,
+        help="FS-PK-09: perkiraan tanpa stasiun atau bagian harus dilengkapi Bagian Anggaran "
+             "sebelum dapat dianggarkan.")
 
     _code_company_uniq = models.Constraint(
         'unique(company_id, code)', 'Nomor perkiraan harus unik per Unit/PG.')
+
+    @api.depends('cost_center_id', 'department_id')
+    def _compute_needs_completion(self):
+        for rec in self:
+            rec.needs_completion = not rec.cost_center_id or not rec.department_id
 
     @api.depends('code')
     def _compute_cost_item(self):
