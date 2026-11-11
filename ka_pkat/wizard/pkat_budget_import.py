@@ -4,12 +4,12 @@ Satu baris per perkiraan: tahun, kode stasiun, nomor perkiraan, 4 komponen
 (barang, non-barang, tenaga kerja, proyek), rencana Januari-Desember.
 Hanya grup pkat_anggaran_kd.
 """
-from odoo.tools import BinaryBytes
 import io
 from collections import OrderedDict
 
 from odoo import _, fields, models
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.tools import BinaryBytes, float_compare, formatLang
 
 MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 COMPONENTS = [
@@ -20,7 +20,7 @@ COMPONENTS = [
 ]
 HEADERS = ['Tahun', 'Kode Stasiun', 'No. Perkiraan'] + [label for _f, label in COMPONENTS] + MONTH_LABELS
 N_COLS = len(HEADERS)  # 19
-XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+MAX_ERRORS_SHOWN = 30
 
 
 def _cell_text(value):
@@ -44,6 +44,9 @@ class PkatBudgetImport(models.TransientModel):
     state = fields.Selection([('draft', 'Unggah'), ('done', 'Hasil')], default='draft')
     result_message = fields.Text('Hasil Impor', readonly=True)
     imported_count = fields.Integer('Baris Diimpor', readonly=True)
+    failed_count = fields.Integer('Baris Gagal', readonly=True)
+    error_file = fields.Binary('Baris Gagal (.xlsx)', attachment=False, readonly=True)
+    error_filename = fields.Char('Nama Berkas Baris Gagal', readonly=True)
 
     # ------------------------------------------------------------------ hak
     def _check_group(self):
@@ -148,23 +151,70 @@ class PkatBudgetImport(models.TransientModel):
         return rows
 
     def _resolve_masters(self, rows):
-        """Isi row['cost_center'] dan row['account'] dari kode; kode tak dikenal -> galat baris."""
+        """FS-PK-02: stasiun dan perkiraan harus terdaftar dan aktif di Unit/PG wizard.
+        Isi row['cost_center'] dan row['account']; kode bermasalah -> galat baris."""
         company = self.company_id
-        centers = {c.code: c for c in self.env['pkat.cost.center'].search(
+        centers = {c.code: c for c in self.env['pkat.cost.center'].with_context(active_test=False).search(
             [('company_id', '=', company.id), ('code', 'in', list({r['cost_center_code'] for r in rows}))])}
-        accounts = {a.code: a for a in self.env['pkat.account'].search(
+        accounts = {a.code: a for a in self.env['pkat.account'].with_context(active_test=False).search(
             [('company_id', '=', company.id), ('code', 'in', list({r['account_code'] for r in rows}))])}
         for row in rows:
-            row['cost_center'] = centers.get(row['cost_center_code'])
-            row['account'] = accounts.get(row['account_code'])
-            if not row['cost_center']:
+            for key, found, label in (
+                    ('cost_center', centers.get(row['cost_center_code']), _("Stasiun")),
+                    ('account', accounts.get(row['account_code']), _("Perkiraan"))):
+                code = row[key + '_code'] or _("(kosong)")
+                row[key] = found if found and found.active else None
+                if not found:
+                    row['errors'].append(_(
+                        "%(label)s %(code)s tidak terdaftar di %(company)s.",
+                        label=label, code=code, company=company.display_name))
+                elif not found.active:
+                    row['errors'].append(_("%(label)s %(code)s tidak aktif.", label=label, code=code))
+
+    def _validate_rows(self, rows):
+        """FS-PK-02: validasi per baris. Galat ditambahkan ke row['errors']."""
+        seen = {}
+        for row in rows:
+            account, center = row['account'], row['cost_center']
+            if account and account.needs_completion:
                 row['errors'].append(_(
-                    "Stasiun %(code)s tidak terdaftar atau tidak aktif di %(company)s.",
-                    code=row['cost_center_code'] or '(kosong)', company=company.display_name))
-            if not row['account']:
+                    "Perkiraan %s belum punya stasiun/bagian di master (FS-PK-09).", account.code))
+            elif account and center and account.cost_center_id != center:
                 row['errors'].append(_(
-                    "Perkiraan %(code)s tidak terdaftar atau tidak aktif di %(company)s.",
-                    code=row['account_code'] or '(kosong)', company=company.display_name))
+                    "Perkiraan %(acc)s bukan milik stasiun %(cc)s (stasiun perkiraan: %(own)s).",
+                    acc=account.code, cc=center.code, own=account.cost_center_id.code))
+            key = (row['year'], row['account_code'])
+            if key in seen:
+                row['errors'].append(_(
+                    "Duplikat: perkiraan %(acc)s tahun %(year)s sudah ada di baris %(n)s.",
+                    acc=row['account_code'], year=row['year'], n=seen[key]))
+            else:
+                seen[key] = row['number']
+            if any(value < 0 for value in row['components'] + row['months']):
+                row['errors'].append(_("Nilai tidak boleh negatif."))
+            total_components = sum(row['components'])
+            total_months = sum(row['months'])
+            if float_compare(total_months, total_components, precision_digits=2) != 0:
+                row['errors'].append(_(
+                    "Jumlah rencana bulanan (%(months)s) tidak sama dengan jumlah komponen (%(comp)s).",
+                    months=formatLang(self.env, total_months, digits=2),
+                    comp=formatLang(self.env, total_components, digits=2)))
+
+    def _validate_groups(self, groups):
+        """PKAT stasiun yang sudah lewat Draft tidak dapat diimpor ulang (FS-PK-03, FS-PK-04)."""
+        states = dict(self.env['pkat.budget']._fields['state'].selection)
+        for (year, _code), group in groups.items():
+            center = group[0]['cost_center']
+            if not center or year is None:
+                continue
+            budget = self.env['pkat.budget'].search(
+                [('cost_center_id', '=', center.id), ('year', '=', year)], limit=1)
+            if budget and budget.state != 'draft':
+                for row in group:
+                    row['errors'].append(_(
+                        "PKAT stasiun %(cc)s tahun %(year)s sudah berstatus %(state)s; "
+                        "hanya Draft yang dapat diimpor ulang.",
+                        cc=center.code, year=year, state=states[budget.state]))
 
     def _group_rows(self, rows):
         """Kelompok per (tahun, kode stasiun), urut kemunculan."""
@@ -196,19 +246,63 @@ class PkatBudgetImport(models.TransientModel):
         self._check_group()
         rows = self._read_rows()
         self._resolve_masters(rows)
-        failed = [row for row in rows if row['errors']]
-        if failed:
-            raise UserError(_("Impor dibatalkan:\n%s", '\n'.join(
-                _("Baris %(n)s: %(err)s", n=row['number'], err='; '.join(row['errors']))
-                for row in failed[:20])))
+        self._validate_rows(rows)
         groups = self._group_rows(rows)
-        for (year, _code), group in groups.items():
-            self._write_group(year, group[0]['cost_center'], group)
-        self.write({
-            'state': 'done',
-            'imported_count': len(rows),
-            'result_message': _(
-                "%(rows)s baris diimpor ke %(n)s PKAT stasiun (status Draft).",
-                rows=len(rows), n=len(groups)),
-        })
+        self._validate_groups(groups)
+
+        # FS-PK-02: semua-atau-tidak per stasiun (dan tahun)
+        imported, failed_groups = 0, OrderedDict()
+        for key, group in groups.items():
+            if not any(row['errors'] for row in group):
+                try:
+                    with self.env.cr.savepoint():
+                        self._write_group(key[0], group[0]['cost_center'], group)
+                    imported += len(group)
+                    continue
+                except (UserError, ValidationError) as exc:
+                    group[0]['errors'].append(str(exc))
+            failed_groups[key] = group
+
+        failed_rows = [row for group in failed_groups.values() for row in group]
+        lines = [_(
+            "%(rows)s baris diimpor ke %(n)s PKAT stasiun (status Draft).",
+            rows=imported, n=len(groups) - len(failed_groups))]
+        vals = {'state': 'done', 'imported_count': imported, 'failed_count': len(failed_rows),
+                'error_file': False, 'error_filename': False}
+        if failed_rows:
+            lines.append(_(
+                "%(rows)s baris pada %(n)s stasiun TIDAK diimpor (semua-atau-tidak per stasiun). "
+                "Unduh berkas baris gagal, perbaiki, lalu impor ulang berkas itu.",
+                rows=len(failed_rows), n=len(failed_groups)))
+            shown = [row for row in failed_rows if row['errors']]
+            lines += [_("Baris %(n)s: %(err)s", n=row['number'], err='; '.join(row['errors']))
+                      for row in shown[:MAX_ERRORS_SHOWN]]
+            if len(shown) > MAX_ERRORS_SHOWN:
+                lines.append(_("... dan %s baris lain (lihat berkas baris gagal).",
+                               len(shown) - MAX_ERRORS_SHOWN))
+            vals.update(
+                error_file=BinaryBytes(self._build_error_file(failed_rows),
+                                       filename='pkat_baris_gagal.xlsx'),
+                error_filename='pkat_baris_gagal.xlsx')
+        vals['result_message'] = '\n'.join(lines)
+        self.write(vals)
         return self._reopen()
+
+    def _build_error_file(self, failed_rows):
+        """Berkas baris gagal: kolom sama dengan template + 'Alasan', sehingga setelah
+        diperbaiki dapat langsung diimpor ulang (kolom ke-20 diabaikan saat impor)."""
+        import xlsxwriter
+        buf = io.BytesIO()
+        book = xlsxwriter.Workbook(buf, {'in_memory': True})
+        head = book.add_format({'bold': True, 'bg_color': '#DDDDDD', 'border': 1})
+        sheet = book.add_worksheet('PKAT')
+        sheet.write_row(0, 0, HEADERS + ['Alasan'], head)
+        sheet.set_column(N_COLS, N_COLS, 90)
+        for index, row in enumerate(failed_rows, start=1):
+            raw = list(row['raw'])
+            raw[1], raw[2] = row['cost_center_code'], row['account_code']  # kode tetap teks
+            reason = '; '.join(row['errors']) or _(
+                "Tidak diimpor karena baris lain pada stasiun ini gagal.")
+            sheet.write_row(index, 0, raw + [reason])
+        book.close()
+        return buf.getvalue()

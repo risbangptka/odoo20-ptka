@@ -17,6 +17,9 @@
                 </div>
                 <group invisible="state != 'done'">
                     <field name="imported_count"/>
+                    <field name="failed_count"/>
+                    <field name="error_file" filename="error_filename" invisible="not failed_count"/>
+                    <field name="error_filename" invisible="1"/>
                     <field name="result_message" nolabel="1" colspan="2"/>
                 </group>
                 <footer>
