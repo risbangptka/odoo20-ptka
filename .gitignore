@@ -2,3 +2,6 @@ __pycache__/
 *.py[co]
 .idea/
 .vscode/
+
+# kredensial akun uji lokal
+*.local

@@ -1,0 +1,74 @@
+<odoo>
+    <record id="view_pkat_project_list" model="ir.ui.view">
+        <field name="name">view.pkat.project.list</field>
+        <field name="model">pkat.project</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="project_type"/>
+                <field name="cost_center_id"/>
+                <field name="company_id"/>
+                <field name="amount_total"/>
+                <field name="commitment"/>
+                <field name="realization"/>
+                <field name="physical_pct"/>
+                <field name="state"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pkat_project_form" model="ir.ui.view">
+        <field name="name">view.pkat.project.form</field>
+        <field name="model">pkat.project</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" type="object" string="Setujui" class="btn-primary" invisible="state not in ('draft', 'pengajuan')" groups="ka_pkat.group_pkat_anggaran_kd"/>
+                    <button name="action_close" type="object" string="Tutup Proyek" invisible="state != 'approved'" groups="ka_pkat.group_pkat_anggaran_kd" confirm="Proyek yang ditutup tidak menerima transaksi baru. Lanjutkan?"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved,closed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="project_type"/>
+                            <field name="company_id"/>
+                            <field name="cost_center_id"/>
+                            <field name="department_id"/>
+                        </group>
+                        <group>
+                            <field name="expense_account_id"/>
+                            <field name="amount_total"/>
+                            <field name="commitment"/>
+                            <field name="realization"/>
+                            <field name="physical_pct"/>
+                            <field name="closed_date"/>
+                        </group>
+                    </group>
+                    <field name="currency_id" invisible="1"/>
+                    <field name="specification" placeholder="Spesifikasi"/>
+                    <field name="year_ids">
+                        <list editable="bottom">
+                            <field name="year"/>
+                            <field name="amount_allocated"/>
+                            <field name="amount_carry_over"/>
+                            <field name="amount_added"/>
+                            <field name="amount_current"/>
+                            <field name="commitment"/>
+                            <field name="realization"/>
+                            <field name="currency_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_pkat_project" model="ir.actions.act_window">
+        <field name="name">Nomor Investasi</field>
+        <field name="res_model">pkat.project</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

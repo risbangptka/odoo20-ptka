@@ -1,0 +1,26 @@
+<odoo>
+    <!-- Struktur menu SRS 7.1. Dashboard dan Laporan belum dibuat (lihat CLAUDE.md). -->
+    <menuitem id="menu_pkat_root" name="PKAT" sequence="45" groups="ka_pkat.group_pkat_pengguna"/>
+    <menuitem id="menu_pkat_budget_root" name="Anggaran" parent="menu_pkat_root" sequence="20"/>
+    <menuitem id="menu_pkat_budget" name="PKAT Stasiun" parent="menu_pkat_budget_root" action="action_pkat_budget" sequence="10"/>
+    <menuitem id="menu_pkat_budget_line" name="Anggaran per Perkiraan" parent="menu_pkat_budget_root" action="action_pkat_budget_line" sequence="20"/>
+    <menuitem id="menu_pkat_project" name="Nomor Investasi" parent="menu_pkat_budget_root" action="action_pkat_project" sequence="30"/>
+    <menuitem id="menu_pkat_pocket" name="Kantung" parent="menu_pkat_budget_root" action="action_pkat_pocket" sequence="40"/>
+    <menuitem id="menu_pkat_request_root" name="Permohonan" parent="menu_pkat_root" sequence="30"/>
+    <menuitem id="menu_pkat_change_request" name="Pergeseran &amp; Tambahan" parent="menu_pkat_request_root" action="action_pkat_change_request" sequence="10"/>
+    <menuitem id="menu_pkat_ledger_root" name="Buku" parent="menu_pkat_root" sequence="40"/>
+    <menuitem id="menu_pkat_commitment" name="Serapan (PO)" parent="menu_pkat_ledger_root" action="action_pkat_commitment" sequence="10"/>
+    <menuitem id="menu_pkat_realization" name="Realisasi (Jurnal)" parent="menu_pkat_ledger_root" action="action_pkat_realization" sequence="20"/>
+    <menuitem id="menu_pkat_potential" name="Potensi (SPM/SPPJ)" parent="menu_pkat_ledger_root" action="action_pkat_potential" sequence="30"/>
+    <menuitem id="menu_pkat_log_root" name="Log" parent="menu_pkat_root" sequence="80"/>
+    <menuitem id="menu_pkat_check_log" name="Pemeriksaan" parent="menu_pkat_log_root" action="action_pkat_check_log" sequence="10"/>
+    <menuitem id="menu_pkat_lock_log" name="Penguncian" parent="menu_pkat_log_root" action="action_pkat_lock_log" sequence="20"/>
+    <menuitem id="menu_pkat_api_log" name="API" parent="menu_pkat_log_root" action="action_pkat_api_log" sequence="30" groups="ka_pkat.group_pkat_admin"/>
+    <menuitem id="menu_pkat_reconcile" name="Rekonsiliasi" parent="menu_pkat_log_root" action="action_pkat_reconcile" sequence="40"/>
+    <menuitem id="menu_pkat_config_root" name="Konfigurasi" parent="menu_pkat_root" sequence="90" groups="ka_pkat.group_pkat_anggaran_kd"/>
+    <menuitem id="menu_pkat_config" name="Pengaturan" parent="menu_pkat_config_root" action="action_pkat_config" sequence="10"/>
+    <menuitem id="menu_pkat_account" name="Perkiraan" parent="menu_pkat_config_root" action="action_pkat_account" sequence="20"/>
+    <menuitem id="menu_pkat_cost_center" name="Stasiun" parent="menu_pkat_config_root" action="action_pkat_cost_center" sequence="30"/>
+    <menuitem id="menu_pkat_department" name="Bagian / Seksi" parent="menu_pkat_config_root" action="action_pkat_department" sequence="40"/>
+    <menuitem id="menu_pkat_api_token" name="Token API" parent="menu_pkat_config_root" action="action_pkat_api_token" sequence="50" groups="ka_pkat.group_pkat_admin"/>
+</odoo>

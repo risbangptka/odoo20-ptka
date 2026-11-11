@@ -1,0 +1,60 @@
+<odoo>
+    <!--
+    Grup PKAT (SRS 2.3).
+    Odoo 20: res.groups tidak punya category_id; grup dikelompokkan lewat
+    privilege_id (res.groups.privilege) yang ber-category_id. Grup tanpa
+    privilege tidak muncul di tab hak akses form pengguna. full_name =
+    "<privilege> / <nama grup>", jadi nama grup tidak diawali "PKAT / ".
+    (acuan core: base/models/res_groups.py, hr/security/hr_security.xml)
+    -->
+    <record id="res_groups_privilege_pkat" model="res.groups.privilege">
+        <field name="name">PKAT</field>
+        <field name="sequence">45</field>
+        <field name="category_id" ref="base.module_category_accounting"/>
+    </record>
+
+    <record id="group_pkat_pengguna" model="res.groups">
+        <field name="name">Pengguna Anggaran (Kasubsi, Kasi, Kabag)</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="res_groups_privilege_pkat"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="group_pkat_tuk_unit" model="res.groups">
+        <field name="name">TUK Unit</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="res_groups_privilege_pkat"/>
+        <field name="implied_ids" eval="[(4, ref('group_pkat_pengguna'))]"/>
+    </record>
+    <record id="group_pkat_pemimpin" model="res.groups">
+        <field name="name">Pemimpin Pabrik - Kadiv</field>
+        <field name="sequence">30</field>
+        <field name="privilege_id" ref="res_groups_privilege_pkat"/>
+        <field name="implied_ids" eval="[(4, ref('group_pkat_pengguna'))]"/>
+    </record>
+    <record id="group_pkat_direksi" model="res.groups">
+        <field name="name">Direksi</field>
+        <field name="sequence">40</field>
+        <field name="privilege_id" ref="res_groups_privilege_pkat"/>
+        <field name="implied_ids" eval="[(4, ref('group_pkat_pengguna'))]"/>
+    </record>
+    <record id="group_pkat_auditor" model="res.groups">
+        <field name="name">Auditor - SPI</field>
+        <field name="sequence">50</field>
+        <field name="privilege_id" ref="res_groups_privilege_pkat"/>
+        <field name="implied_ids" eval="[(4, ref('group_pkat_pengguna'))]"/>
+    </record>
+    <record id="group_pkat_anggaran_kd" model="res.groups">
+        <field name="name">Bagian Anggaran Kantor Direksi</field>
+        <field name="sequence">60</field>
+        <field name="privilege_id" ref="res_groups_privilege_pkat"/>
+        <field name="implied_ids" eval="[(4, ref('group_pkat_pengguna'))]"/>
+    </record>
+    <record id="group_pkat_admin" model="res.groups">
+        <field name="name">Administrator (PDE)</field>
+        <field name="sequence">70</field>
+        <field name="privilege_id" ref="res_groups_privilege_pkat"/>
+        <field name="implied_ids" eval="[(4, ref('group_pkat_anggaran_kd'))]"/>
+        <!-- pola core (hr, account): admin bawaan langsung menjadi anggota grup tertinggi -->
+        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+</odoo>

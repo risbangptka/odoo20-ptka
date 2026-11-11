@@ -1,0 +1,76 @@
+<odoo>
+    <record id="view_pkat_commitment_list" model="ir.ui.view">
+        <field name="name">view.pkat.commitment.list</field>
+        <field name="model">pkat.commitment</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="po_date"/>
+                <field name="po_number"/>
+                <field name="po_line_ref"/>
+                <field name="po_kind"/>
+                <field name="partner_name"/>
+                <field name="company_id"/>
+                <field name="account_id"/>
+                <field name="project_id"/>
+                <field name="amount" sum="Total"/>
+                <field name="state"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_pkat_commitment" model="ir.actions.act_window">
+        <field name="name">Buku Serapan (PO)</field>
+        <field name="res_model">pkat.commitment</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+    <record id="view_pkat_realization_list" model="ir.ui.view">
+        <field name="name">view.pkat.realization.list</field>
+        <field name="model">pkat.realization</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="date"/>
+                <field name="move_name"/>
+                <field name="source_type"/>
+                <field name="source_number"/>
+                <field name="company_id"/>
+                <field name="account_id"/>
+                <field name="project_id"/>
+                <field name="debit"/>
+                <field name="credit"/>
+                <field name="is_correction"/>
+                <field name="amount_counted" sum="Total"/>
+                <field name="state"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_pkat_realization" model="ir.actions.act_window">
+        <field name="name">Buku Realisasi (Jurnal)</field>
+        <field name="res_model">pkat.realization</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+    <record id="view_pkat_potential_list" model="ir.ui.view">
+        <field name="name">view.pkat.potential.list</field>
+        <field name="model">pkat.potential</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="date"/>
+                <field name="doc_type"/>
+                <field name="doc_number"/>
+                <field name="company_id"/>
+                <field name="account_id"/>
+                <field name="project_id"/>
+                <field name="amount" sum="Total"/>
+                <field name="over_budget"/>
+                <field name="reason"/>
+                <field name="state"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_pkat_potential" model="ir.actions.act_window">
+        <field name="name">Potensi Serapan (SPM/SPPJ)</field>
+        <field name="res_model">pkat.potential</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+</odoo>

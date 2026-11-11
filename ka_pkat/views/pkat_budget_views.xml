@@ -1,0 +1,152 @@
+<odoo>
+    <record id="view_pkat_budget_list" model="ir.ui.view">
+        <field name="name">view.pkat.budget.list</field>
+        <field name="model">pkat.budget</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="year"/>
+                <field name="cost_center_id"/>
+                <field name="department_id"/>
+                <field name="company_id"/>
+                <field name="amount_current" sum="Total"/>
+                <field name="commitment" sum="Total"/>
+                <field name="realization" sum="Total"/>
+                <field name="state"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pkat_budget_form" model="ir.ui.view">
+        <field name="name">view.pkat.budget.form</field>
+        <field name="model">pkat.budget</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_proses" type="object" string="Proses" invisible="state != 'draft'" groups="ka_pkat.group_pkat_anggaran_kd"/>
+                    <button name="action_ajukan" type="object" string="Ajukan" class="btn-primary" invisible="state not in ('proses', 'penyesuaian')" groups="ka_pkat.group_pkat_anggaran_kd"/>
+                    <button name="action_penyesuaian" type="object" string="Penyesuaian" invisible="state not in ('pengajuan', 'proses_direksi')" groups="ka_pkat.group_pkat_anggaran_kd"/>
+                    <button name="action_proses_direksi" type="object" string="Proses Direksi" invisible="state != 'pengajuan'" groups="ka_pkat.group_pkat_anggaran_kd"/>
+                    <button name="action_approve" type="object" string="Disetujui Direksi" class="btn-primary" invisible="state != 'proses_direksi'" groups="ka_pkat.group_pkat_anggaran_kd"/>
+                    <button name="action_cancel" type="object" string="Batalkan" invisible="state in ('approved', 'cancel')" groups="ka_pkat.group_pkat_anggaran_kd"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pengajuan,proses_direksi,approved"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="cost_center_id"/>
+                            <field name="department_id"/>
+                            <field name="company_id"/>
+                            <field name="year"/>
+                        </group>
+                        <group>
+                            <field name="amount_current"/>
+                            <field name="commitment"/>
+                            <field name="realization"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Perkiraan" name="lines">
+                            <field name="line_ids" readonly="state == 'approved'">
+                                <list decoration-danger="ews_color == 'red'" decoration-warning="ews_color == 'yellow'">
+                                    <field name="account_id"/>
+                                    <field name="wage_type" optional="show"/>
+                                    <field name="amount_goods" optional="hide"/>
+                                    <field name="amount_nongoods" optional="hide"/>
+                                    <field name="amount_wage" optional="hide"/>
+                                    <field name="amount_project" optional="hide"/>
+                                    <field name="amount_initial" sum="Total"/>
+                                    <field name="amount_current" sum="Total"/>
+                                    <field name="commitment" sum="Total"/>
+                                    <field name="pct_commitment"/>
+                                    <field name="realization" sum="Total"/>
+                                    <field name="pct_realization"/>
+                                    <field name="remain_commitment" optional="show"/>
+                                    <field name="remain_budget" optional="show"/>
+                                    <field name="ews_color" column_invisible="1"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_pkat_budget_line_form" model="ir.ui.view">
+        <field name="name">view.pkat.budget.line.form</field>
+        <field name="model">pkat.budget.line</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="account_id"/>
+                            <field name="budget_id"/>
+                            <field name="amount_goods"/>
+                            <field name="amount_nongoods"/>
+                            <field name="amount_wage"/>
+                            <field name="amount_project"/>
+                            <field name="amount_initial"/>
+                            <field name="shift_in"/>
+                        </group>
+                        <group>
+                            <field name="shift_out"/>
+                            <field name="amount_added"/>
+                            <field name="amount_current"/>
+                            <field name="commitment"/>
+                            <field name="realization"/>
+                            <field name="remain_commitment"/>
+                            <field name="remain_budget"/>
+                            <field name="ews_color"/>
+                        </group>
+                    </group>
+                    <field name="currency_id" invisible="1"/>
+                    <field name="month_ids">
+                        <list editable="bottom">
+                            <field name="month"/>
+                            <field name="amount_plan" sum="Total"/>
+                            <field name="commitment" sum="Total"/>
+                            <field name="realization" sum="Total"/>
+                            <field name="currency_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_pkat_budget_line_list" model="ir.ui.view">
+        <field name="name">view.pkat.budget.line.list</field>
+        <field name="model">pkat.budget.line</field>
+        <field name="arch" type="xml">
+            <list create="0" decoration-danger="ews_color == 'red'" decoration-warning="ews_color == 'yellow'">
+                <field name="year"/>
+                <field name="company_id"/>
+                <field name="department_id"/>
+                <field name="cost_center_id"/>
+                <field name="account_id"/>
+                <field name="wage_type"/>
+                <field name="amount_current" sum="Total"/>
+                <field name="commitment" sum="Total"/>
+                <field name="pct_commitment"/>
+                <field name="realization" sum="Total"/>
+                <field name="pct_realization"/>
+                <field name="remain_commitment"/>
+                <field name="remain_budget"/>
+                <field name="ews_color" column_invisible="1"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_pkat_budget" model="ir.actions.act_window">
+        <field name="name">PKAT Stasiun</field>
+        <field name="res_model">pkat.budget</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_pkat_budget_line" model="ir.actions.act_window">
+        <field name="name">Anggaran per Perkiraan</field>
+        <field name="res_model">pkat.budget.line</field>
+        <field name="view_mode">list,pivot,form</field>
+    </record>
+</odoo>

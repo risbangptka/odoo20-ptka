@@ -1,0 +1,131 @@
+<odoo>
+    <record id="view_pkat_department_list" model="ir.ui.view">
+        <field name="name">view.pkat.department.list</field>
+        <field name="model">pkat.department</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="parent_id"/>
+                <field name="company_id"/>
+                <field name="manager_user_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pkat_department_form" model="ir.ui.view">
+        <field name="name">view.pkat.department.form</field>
+        <field name="model">pkat.department</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="parent_id"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="manager_user_id"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pkat_department" model="ir.actions.act_window">
+        <field name="name">Bagian / Seksi</field>
+        <field name="res_model">pkat.department</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="view_pkat_cost_center_list" model="ir.ui.view">
+        <field name="name">view.pkat.cost.center.list</field>
+        <field name="model">pkat.cost.center</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="section_id"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pkat_cost_center_form" model="ir.ui.view">
+        <field name="name">view.pkat.cost.center.form</field>
+        <field name="model">pkat.cost.center</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="department_id"/>
+                        </group>
+                        <group>
+                            <field name="section_id"/>
+                            <field name="company_id"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pkat_cost_center" model="ir.actions.act_window">
+        <field name="name">Stasiun</field>
+        <field name="res_model">pkat.cost.center</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="view_pkat_account_list" model="ir.ui.view">
+        <field name="name">view.pkat.account.list</field>
+        <field name="model">pkat.account</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="cost_center_id"/>
+                <field name="department_id"/>
+                <field name="cost_item"/>
+                <field name="wage_type"/>
+                <field name="kind"/>
+                <field name="is_spt"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pkat_account_form" model="ir.ui.view">
+        <field name="name">view.pkat.account.form</field>
+        <field name="model">pkat.account</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="cost_center_id"/>
+                            <field name="department_id"/>
+                            <field name="cost_item"/>
+                        </group>
+                        <group>
+                            <field name="wage_type"/>
+                            <field name="kind"/>
+                            <field name="unit_pocket"/>
+                            <field name="is_spt"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pkat_account" model="ir.actions.act_window">
+        <field name="name">Perkiraan</field>
+        <field name="res_model">pkat.account</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

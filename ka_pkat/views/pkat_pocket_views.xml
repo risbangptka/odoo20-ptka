@@ -1,0 +1,64 @@
+<odoo>
+    <record id="view_pkat_pocket_list" model="ir.ui.view">
+        <field name="name">view.pkat.pocket.list</field>
+        <field name="model">pkat.pocket</field>
+        <field name="arch" type="xml">
+            <list create="0" decoration-danger="locked_po or locked_real or manual_lock">
+                <field name="year"/>
+                <field name="company_id"/>
+                <field name="level"/>
+                <field name="ref_department_id"/>
+                <field name="ref_cost_center_id"/>
+                <field name="ref_account_id"/>
+                <field name="wage_type"/>
+                <field name="amount_current"/>
+                <field name="commitment"/>
+                <field name="pct_commitment"/>
+                <field name="realization"/>
+                <field name="pct_realization"/>
+                <field name="locked_po"/>
+                <field name="locked_real"/>
+                <field name="manual_lock"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_pkat_pocket_form" model="ir.ui.view">
+        <field name="name">view.pkat.pocket.form</field>
+        <field name="model">pkat.pocket</field>
+        <field name="arch" type="xml">
+            <form create="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="year"/>
+                            <field name="level"/>
+                            <field name="wage_type"/>
+                            <field name="ref_department_id"/>
+                            <field name="ref_cost_center_id"/>
+                            <field name="ref_account_id"/>
+                            <field name="amount_current"/>
+                        </group>
+                        <group>
+                            <field name="commitment"/>
+                            <field name="pct_commitment"/>
+                            <field name="realization"/>
+                            <field name="pct_realization"/>
+                            <field name="locked_po"/>
+                            <field name="locked_real"/>
+                            <field name="manual_lock"/>
+                            <field name="manual_lock_reason"/>
+                        </group>
+                    </group>
+                    <field name="currency_id" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_pkat_pocket" model="ir.actions.act_window">
+        <field name="name">Kantung Anggaran</field>
+        <field name="res_model">pkat.pocket</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
