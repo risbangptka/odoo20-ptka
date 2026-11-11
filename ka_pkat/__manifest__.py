@@ -29,6 +29,7 @@ logika bisnis sebagian besar masih TODO.
         'views/pkat_ledger_views.xml',
         'views/pkat_log_views.xml',
         'views/pkat_menus.xml',
+        'wizard/pkat_budget_import_views.xml',
     ],
     'application': True,
     'installable': True,

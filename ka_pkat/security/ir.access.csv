@@ -49,3 +49,4 @@ access_pkat_change_request_line_pengguna,pkat.change.request.line pengguna,pkat.
 access_pkat_change_request_line_tuk_unit,pkat.change.request.line tuk_unit,pkat.change.request.line,ka_pkat.group_pkat_tuk_unit,crud,
 access_pkat_change_request_line_pemimpin,pkat.change.request.line pemimpin,pkat.change.request.line,ka_pkat.group_pkat_pemimpin,crud,
 access_pkat_change_request_line_anggaran_kd,pkat.change.request.line anggaran_kd,pkat.change.request.line,ka_pkat.group_pkat_anggaran_kd,crud,
+access_pkat_budget_import_anggaran_kd,pkat.budget.import anggaran_kd,pkat.budget.import,ka_pkat.group_pkat_anggaran_kd,crud,

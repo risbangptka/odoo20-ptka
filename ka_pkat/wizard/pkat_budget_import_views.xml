@@ -1,0 +1,38 @@
+<odoo>
+    <!-- FS-PK-01: impor PKAT dari Excel; hanya Bagian Anggaran KD -->
+    <record id="view_pkat_budget_import_form" model="ir.ui.view">
+        <field name="name">view.pkat.budget.import.form</field>
+        <field name="model">pkat.budget.import</field>
+        <field name="arch" type="xml">
+            <form string="Impor PKAT dari Excel">
+                <field name="state" invisible="1"/>
+                <group invisible="state != 'draft'">
+                    <field name="company_id"/>
+                    <field name="file" filename="filename"/>
+                    <field name="filename" invisible="1"/>
+                </group>
+                <div invisible="state != 'draft'" class="text-muted">
+                    Satu baris per perkiraan: tahun, kode stasiun, nomor perkiraan, komponen
+                    (barang, non barang, tenaga kerja, proyek), rencana Januari–Desember.
+                </div>
+                <group invisible="state != 'done'">
+                    <field name="imported_count"/>
+                    <field name="result_message" nolabel="1" colspan="2"/>
+                </group>
+                <footer>
+                    <button name="action_import" type="object" string="Impor" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_download_template" type="object" string="Unduh Template" invisible="state != 'draft'"/>
+                    <button special="cancel" string="Tutup"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_pkat_budget_import" model="ir.actions.act_window">
+        <field name="name">Impor PKAT (Excel)</field>
+        <field name="res_model">pkat.budget.import</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_pkat_budget_import" name="Impor PKAT (Excel)" parent="menu_pkat_budget_root"
+              action="action_pkat_budget_import" sequence="15" groups="ka_pkat.group_pkat_anggaran_kd"/>
+</odoo>
