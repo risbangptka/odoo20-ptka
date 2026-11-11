@@ -1,6 +1,7 @@
 from . import pkat_config
 from . import account_account
 from . import hr_department
+from . import product
 from . import pkat_master
 from . import pkat_budget
 from . import pkat_project
