@@ -1,4 +1,5 @@
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 WAGE_TYPES = [('upah', 'Tenaga Kerja (Upah)'), ('non_upah', 'Non Tenaga Kerja (Non-Upah)')]
 ACCOUNT_KINDS = [('expense', 'Biaya'), ('income', 'Pendapatan'), ('investment', 'Investasi')]
@@ -7,6 +8,7 @@ UNIT_POCKETS = [
     ('barang_jasa', 'Pemakaian Barang/Jasa'),
     ('bahan_baku_tebu', 'Perolehan Bahan Baku Tebu'),
 ]
+ACCOUNT_CODE_LENGTH = 8
 
 
 class PkatDepartment(models.Model):
@@ -28,6 +30,14 @@ class PkatDepartment(models.Model):
 
     _code_company_uniq = models.Constraint(
         'unique(company_id, code)', 'Kode bagian harus unik per Unit/PG.')
+
+    @api.constrains('parent_id', 'company_id')
+    def _check_parent(self):
+        """DM-02: hierarki tidak lintas Unit/PG (lingkaran sudah ditolak core lewat _parent_store)."""
+        for rec in self:
+            if rec.parent_id and rec.parent_id.company_id != rec.company_id:
+                raise ValidationError(_(
+                    "Induk bagian %(dept)s harus dari Unit/PG yang sama.", dept=rec.display_name))
 
 
 class PkatCostCenter(models.Model):
@@ -51,6 +61,14 @@ class PkatCostCenter(models.Model):
     def _compute_display_name(self):
         for rec in self:
             rec.display_name = '%s %s' % (rec.code or '', rec.name or '')
+
+    @api.constrains('company_id', 'department_id', 'section_id')
+    def _check_company(self):
+        """DM-02: stasiun, bagian, dan seksinya harus satu Unit/PG."""
+        for rec in self:
+            if (rec.department_id | rec.section_id).company_id - rec.company_id:
+                raise ValidationError(_(
+                    "Bagian/seksi stasiun %(cc)s harus dari Unit/PG yang sama.", cc=rec.display_name))
 
 
 class PkatAccount(models.Model):
@@ -80,10 +98,62 @@ class PkatAccount(models.Model):
     @api.depends('code')
     def _compute_cost_item(self):
         for rec in self:
-            digits = ''.join(ch for ch in (rec.code or '') if ch.isdigit())
-            rec.cost_item = digits[6:8] if len(digits) >= 8 else False
+            code = rec.code or ''
+            rec.cost_item = code[6:8] if len(code) == ACCOUNT_CODE_LENGTH and code.isdigit() else False
 
     @api.depends('code', 'name')
     def _compute_display_name(self):
         for rec in self:
             rec.display_name = '%s %s' % (rec.code or '', rec.name or '')
+
+    @api.constrains('code')
+    def _check_code(self):
+        """DM-02: nomor perkiraan tepat 8 digit angka."""
+        for rec in self:
+            if len(rec.code) != ACCOUNT_CODE_LENGTH or not rec.code.isdigit():
+                raise ValidationError(_(
+                    "Nomor perkiraan harus %(n)s digit angka: %(code)s",
+                    n=ACCOUNT_CODE_LENGTH, code=rec.code))
+
+    @api.constrains('company_id', 'cost_center_id', 'department_id')
+    def _check_company(self):
+        """DM-02: perkiraan, stasiun, dan bagiannya harus satu Unit/PG."""
+        for rec in self:
+            if (rec.cost_center_id.company_id | rec.department_id.company_id) - rec.company_id:
+                raise ValidationError(_(
+                    "Stasiun/bagian perkiraan %(acc)s harus dari Unit/PG yang sama.",
+                    acc=rec.display_name))
+
+    @api.model
+    def _find_cost_center(self, code, company_id):
+        """Stasiun pemilik nomor perkiraan (DM-02: digit 3-4 = stasiun).
+        Odoo 10 (ka_account) menyimpan kode stasiun sebagai 4 digit pertama perkiraan,
+        SRS menyebut digit 3-4; keduanya dicoba, 4 digit pertama didahulukan."""
+        code = code or ''
+        if len(code) != ACCOUNT_CODE_LENGTH or not code.isdigit() or not company_id:
+            return self.env['pkat.cost.center']
+        centers = self.env['pkat.cost.center'].search(
+            [('company_id', '=', company_id), ('code', 'in', [code[:4], code[2:4]])])
+        return (centers.filtered(lambda c: c.code == code[:4]) or centers)[:1]
+
+    @api.onchange('code', 'company_id')
+    def _onchange_code(self):
+        if not self.cost_center_id:
+            self.cost_center_id = self._find_cost_center(self.code, self.company_id.id)
+
+    @api.onchange('cost_center_id')
+    def _onchange_cost_center(self):
+        if self.cost_center_id:
+            self.department_id = self.cost_center_id.department_id
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Stasiun diturunkan dari nomor perkiraan dan bagian dari stasiun bila tidak diisi."""
+        for vals in vals_list:
+            if not vals.get('cost_center_id'):
+                vals['cost_center_id'] = self._find_cost_center(
+                    vals.get('code'), vals.get('company_id')).id
+            if vals.get('cost_center_id') and not vals.get('department_id'):
+                vals['department_id'] = self.env['pkat.cost.center'].browse(
+                    vals['cost_center_id']).department_id.id
+        return super().create(vals_list)
