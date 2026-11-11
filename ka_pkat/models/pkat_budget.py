@@ -85,7 +85,11 @@ class PkatBudgetLine(models.Model):
     _order = 'budget_id, account_id'
 
     budget_id = fields.Many2one('pkat.budget', 'PKAT Stasiun', required=True, ondelete='cascade')
-    account_id = fields.Many2one('account.account', 'Perkiraan', required=True, index=True)
+    account_id = fields.Many2one(
+        'account.account', 'Perkiraan', required=True, index=True,
+        # K1/K8/FS-PK-09: hanya perkiraan PKAT detail yang lengkap, milik stasiun PKAT ini
+        domain="[('pkat_managed', '=', True), ('pkat_is_view', '=', False), "
+               "('pkat_needs_completion', '=', False), ('pkat_cost_center_id', '=', cost_center_id)]")
     company_id = fields.Many2one(related='budget_id.company_id', store=True)
     currency_id = fields.Many2one(related='company_id.currency_id')
     year = fields.Integer(related='budget_id.year', store=True)
@@ -135,6 +139,11 @@ class PkatBudgetLine(models.Model):
                     "Perkiraan %(acc)s belum punya stasiun atau bagian. "
                     "Lengkapi master perkiraan sebelum dianggarkan.",
                     acc=rec.account_id.display_name))
+            if account.pkat_cost_center_id != rec.budget_id.cost_center_id:
+                raise ValidationError(_(
+                    "Perkiraan %(acc)s milik stasiun %(own)s, bukan stasiun %(cc)s.",
+                    acc=account.display_name, own=account.pkat_cost_center_id.display_name,
+                    cc=rec.budget_id.cost_center_id.display_name))
 
     @api.depends('amount_goods', 'amount_nongoods', 'amount_wage', 'amount_project',
                  'shift_in', 'shift_out', 'amount_added')

@@ -49,3 +49,21 @@ class TestAccountCompletion(PkatCase):
         for acc in (biasa, unit_b):
             with self.assertRaises(ValidationError):
                 self.env['pkat.budget.line'].create({'budget_id': budget.id, 'account_id': acc.id})
+
+    def test_perkiraan_harus_milik_stasiun_pkat(self):
+        """FS-PK-02/FS-PK-09: perkiraan stasiun lain ditolak di model, bukan hanya saat impor."""
+        with self.assertRaises(ValidationError):
+            self.env['pkat.budget.line'].create(
+                {'budget_id': self._budget().id, 'account_id': self.acc_putar_brg.id})
+
+    def test_domain_pilihan_perkiraan(self):
+        """Pilihan perkiraan di baris anggaran: PKAT, detail, lengkap, milik stasiun itu."""
+        from odoo.tools.safe_eval import safe_eval
+        induk = self._account('5025', 'Induk', pkat_is_view=True)
+        belum = self._account('5099.240', 'Tanpa stasiun')
+        field = self.env['pkat.budget.line']._fields['account_id']
+        domain = safe_eval(field.domain, {'cost_center_id': self.cc_masak.id})
+        pilihan = self.env['account.account'].search(domain)
+        self.assertEqual(pilihan, self.acc_masak_brg | self.acc_masak_upah)
+        self.assertNotIn(induk, pilihan)
+        self.assertNotIn(belum, pilihan)

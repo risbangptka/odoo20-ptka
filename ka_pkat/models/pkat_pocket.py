@@ -15,7 +15,8 @@ class PkatPocket(models.Model):
     currency_id = fields.Many2one(related='company_id.currency_id')
     year = fields.Integer('Tahun', required=True, index=True)
     level = fields.Selection(POCKET_LEVELS, 'Tingkat', required=True)
-    ref_account_id = fields.Many2one('account.account', 'Perkiraan')
+    ref_account_id = fields.Many2one('account.account', 'Perkiraan',
+                                     domain="[('pkat_managed', '=', True)]")
     ref_cost_center_id = fields.Many2one('pkat.cost.center', 'Stasiun')
     ref_department_id = fields.Many2one('hr.department', 'Bagian')
     wage_type = fields.Selection(WAGE_TYPES, 'Jenis', required=True)
