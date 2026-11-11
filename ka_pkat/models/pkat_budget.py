@@ -85,14 +85,14 @@ class PkatBudgetLine(models.Model):
     _order = 'budget_id, account_id'
 
     budget_id = fields.Many2one('pkat.budget', 'PKAT Stasiun', required=True, ondelete='cascade')
-    account_id = fields.Many2one('pkat.account', 'Perkiraan', required=True, index=True)
+    account_id = fields.Many2one('account.account', 'Perkiraan', required=True, index=True)
     company_id = fields.Many2one(related='budget_id.company_id', store=True)
     currency_id = fields.Many2one(related='company_id.currency_id')
     year = fields.Integer(related='budget_id.year', store=True)
     state = fields.Selection(related='budget_id.state', store=True)
     cost_center_id = fields.Many2one(related='budget_id.cost_center_id', store=True)
     department_id = fields.Many2one(related='budget_id.department_id', store=True)
-    wage_type = fields.Selection(related='account_id.wage_type', store=True)
+    wage_type = fields.Selection(related='account_id.pkat_wage_type', store=True)
 
     amount_goods = fields.Monetary('Barang')
     amount_nongoods = fields.Monetary('Non Barang')
@@ -120,9 +120,17 @@ class PkatBudgetLine(models.Model):
 
     @api.constrains('account_id', 'budget_id')
     def _check_account(self):
-        """FS-PK-09: perkiraan yang belum lengkap (tanpa stasiun/bagian) tidak dapat dianggarkan."""
+        """K1/K8/FS-PK-09: hanya perkiraan PKAT detail yang sudah lengkap yang dapat dianggarkan."""
         for rec in self:
-            if rec.account_id.needs_completion:
+            account = rec.account_id
+            if not account.pkat_managed or account.pkat_company_id != rec.company_id:
+                raise ValidationError(_(
+                    "Perkiraan %(acc)s bukan perkiraan PKAT milik %(company)s.",
+                    acc=account.display_name, company=rec.company_id.display_name))
+            if account.pkat_is_view:
+                raise ValidationError(_(
+                    "Perkiraan induk %(acc)s tidak dapat dianggarkan.", acc=account.display_name))
+            if account.pkat_needs_completion:
                 raise ValidationError(_(
                     "Perkiraan %(acc)s belum punya stasiun atau bagian. "
                     "Lengkapi master perkiraan sebelum dianggarkan.",

@@ -36,7 +36,7 @@ class PkatProject(models.Model):
     cost_center_id = fields.Many2one('pkat.cost.center', 'Stasiun')
     department_id = fields.Many2one(related='cost_center_id.department_id', store=True)
     expense_account_id = fields.Many2one(
-        'pkat.account', 'Perkiraan Biaya Rutin (PLB)',
+        'account.account', 'Perkiraan Biaya Rutin (PLB)',
         help="Khusus PLB: PO PLB juga menambah serapan perkiraan ini (BRD SR-09).")
     amount_total = fields.Monetary('Nilai Proyek (PKAT)', tracking=True)
     year_ids = fields.One2many('pkat.project.year', 'project_id', 'Alokasi per Tahun')

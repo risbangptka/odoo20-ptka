@@ -15,7 +15,7 @@ logika bisnis sebagian besar masih TODO.
     'category': 'Accounting',
     'version': '20.0.0.1.0',
     'license': 'LGPL-3',
-    'depends': ['base', 'mail', 'ka_base'],
+    'depends': ['base', 'mail', 'account', 'stock', 'hr', 'ka_base'],
     'data': [
         'security/pkat_groups.xml',
         'security/ir.access.csv',

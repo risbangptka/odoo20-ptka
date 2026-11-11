@@ -17,7 +17,7 @@ class PkatCommitment(models.Model):
     partner_name = fields.Char('Rekanan')
     po_kind = fields.Selection([('rutin', 'Rutin'), ('plb', 'PLB'), ('investasi', 'Investasi')],
                                'Jenis PO', default='rutin', required=True)
-    account_id = fields.Many2one('pkat.account', 'Perkiraan', index=True)
+    account_id = fields.Many2one('account.account', 'Perkiraan', index=True)
     budget_line_id = fields.Many2one('pkat.budget.line', 'Anggaran Perkiraan', index=True)
     project_id = fields.Many2one('pkat.project', 'Nomor Investasi', index=True)
     amount = fields.Monetary('Nilai (tanpa PPN)', required=True)
@@ -45,7 +45,7 @@ class PkatRealization(models.Model):
         ('kas_bank', 'Kas/Bank'), ('memo', 'Memo/Koreksi'), ('lainnya', 'Lainnya'),
     ], 'Sumber', default='lainnya')
     source_number = fields.Char('No. Dokumen Sumber')
-    account_id = fields.Many2one('pkat.account', 'Perkiraan', index=True)
+    account_id = fields.Many2one('account.account', 'Perkiraan', index=True)
     budget_line_id = fields.Many2one('pkat.budget.line', 'Anggaran Perkiraan', index=True)
     project_id = fields.Many2one('pkat.project', 'Nomor Investasi', index=True)
     debit = fields.Monetary('Debet')
@@ -72,7 +72,7 @@ class PkatPotential(models.Model):
     doc_type = fields.Selection([('spm', 'SPM'), ('sppj', 'SPPJ')], 'Jenis', required=True)
     doc_number = fields.Char('No. Dokumen', required=True)
     date = fields.Date('Tanggal', required=True)
-    account_id = fields.Many2one('pkat.account', 'Perkiraan')
+    account_id = fields.Many2one('account.account', 'Perkiraan')
     budget_line_id = fields.Many2one('pkat.budget.line', 'Anggaran Perkiraan')
     project_id = fields.Many2one('pkat.project', 'Nomor Investasi')
     amount = fields.Monetary('HPS x Kuantum')

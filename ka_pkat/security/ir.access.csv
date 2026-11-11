@@ -1,12 +1,8 @@
 id,name,model_id,group_id/id,operation,domain
 access_pkat_config_pengguna,pkat.config pengguna,pkat.config,ka_pkat.group_pkat_pengguna,r,
 access_pkat_config_anggaran_kd,pkat.config anggaran_kd,pkat.config,ka_pkat.group_pkat_anggaran_kd,crud,
-access_pkat_department_pengguna,pkat.department pengguna,pkat.department,ka_pkat.group_pkat_pengguna,r,
-access_pkat_department_anggaran_kd,pkat.department anggaran_kd,pkat.department,ka_pkat.group_pkat_anggaran_kd,crud,
 access_pkat_cost_center_pengguna,pkat.cost.center pengguna,pkat.cost.center,ka_pkat.group_pkat_pengguna,r,
 access_pkat_cost_center_anggaran_kd,pkat.cost.center anggaran_kd,pkat.cost.center,ka_pkat.group_pkat_anggaran_kd,crud,
-access_pkat_account_pengguna,pkat.account pengguna,pkat.account,ka_pkat.group_pkat_pengguna,r,
-access_pkat_account_anggaran_kd,pkat.account anggaran_kd,pkat.account,ka_pkat.group_pkat_anggaran_kd,crud,
 access_pkat_budget_pengguna,pkat.budget pengguna,pkat.budget,ka_pkat.group_pkat_pengguna,r,
 access_pkat_budget_anggaran_kd,pkat.budget anggaran_kd,pkat.budget,ka_pkat.group_pkat_anggaran_kd,crud,
 access_pkat_budget_line_pengguna,pkat.budget.line pengguna,pkat.budget.line,ka_pkat.group_pkat_pengguna,r,
@@ -50,3 +46,5 @@ access_pkat_change_request_line_tuk_unit,pkat.change.request.line tuk_unit,pkat.
 access_pkat_change_request_line_pemimpin,pkat.change.request.line pemimpin,pkat.change.request.line,ka_pkat.group_pkat_pemimpin,crud,
 access_pkat_change_request_line_anggaran_kd,pkat.change.request.line anggaran_kd,pkat.change.request.line,ka_pkat.group_pkat_anggaran_kd,crud,
 access_pkat_budget_import_anggaran_kd,pkat.budget.import anggaran_kd,pkat.budget.import,ka_pkat.group_pkat_anggaran_kd,crud,
+access_account_account_pkat_anggaran_kd,account.account pkat anggaran_kd (lengkapi stasiun/bagian),account.account,ka_pkat.group_pkat_anggaran_kd,u,"[('pkat_managed', '=', True)]"
+access_hr_department_pkat_anggaran_kd,hr.department pkat anggaran_kd,hr.department,ka_pkat.group_pkat_anggaran_kd,u,

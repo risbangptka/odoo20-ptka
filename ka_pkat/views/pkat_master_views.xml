@@ -1,33 +1,44 @@
 <odoo>
+    <!--
+    Master PKAT (PERUBAHAN_DESAIN_01):
+    - Bagian/seksi  = hr.department (K7), Perkiraan = account.account (K1).
+    - View di sini ber-priority 99 dan dipasang lewat view_ids pada action PKAT, supaya
+      tidak menggantikan view bawaan modul HR dan Accounting.
+    - Perkiraan dan bagian tidak dibuat manual di Odoo 20 (bagian 4): create/delete dimatikan.
+    -->
+
+    <!-- ===== Bagian / Seksi (hr.department) ===== -->
     <record id="view_pkat_department_list" model="ir.ui.view">
         <field name="name">view.pkat.department.list</field>
-        <field name="model">pkat.department</field>
+        <field name="model">hr.department</field>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
-            <list>
-                <field name="code"/>
+            <list create="0" delete="0">
+                <field name="pkat_code"/>
                 <field name="name"/>
                 <field name="parent_id"/>
                 <field name="company_id"/>
-                <field name="manager_user_id"/>
+                <field name="pkat_manager_user_id"/>
             </list>
         </field>
     </record>
     <record id="view_pkat_department_form" model="ir.ui.view">
         <field name="name">view.pkat.department.form</field>
-        <field name="model">pkat.department</field>
+        <field name="model">hr.department</field>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
-            <form>
+            <form create="0" delete="0">
                 <sheet>
                     <group>
                         <group>
-                            <field name="code"/>
-                            <field name="name"/>
-                            <field name="parent_id"/>
+                            <field name="pkat_code"/>
+                            <field name="name" readonly="1"/>
+                            <field name="parent_id" readonly="1"/>
                         </group>
                         <group>
-                            <field name="company_id"/>
-                            <field name="manager_user_id"/>
-                            <field name="active"/>
+                            <field name="company_id" readonly="1"/>
+                            <field name="pkat_manager_user_id"/>
+                            <field name="ka10_id" readonly="1"/>
                         </group>
                     </group>
                 </sheet>
@@ -36,9 +47,14 @@
     </record>
     <record id="action_pkat_department" model="ir.actions.act_window">
         <field name="name">Bagian / Seksi</field>
-        <field name="res_model">pkat.department</field>
+        <field name="res_model">hr.department</field>
         <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_pkat_department_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_pkat_department_form')})]"/>
     </record>
+
+    <!-- ===== Stasiun (pkat.cost.center) ===== -->
     <record id="view_pkat_cost_center_list" model="ir.ui.view">
         <field name="name">view.pkat.cost.center.list</field>
         <field name="model">pkat.cost.center</field>
@@ -48,6 +64,7 @@
                 <field name="name"/>
                 <field name="department_id"/>
                 <field name="section_id"/>
+                <field name="subsection_id" optional="show"/>
                 <field name="company_id"/>
             </list>
         </field>
@@ -62,12 +79,14 @@
                         <group>
                             <field name="code"/>
                             <field name="name"/>
-                            <field name="department_id"/>
-                        </group>
-                        <group>
-                            <field name="section_id"/>
                             <field name="company_id"/>
                             <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="department_id"/>
+                            <field name="section_id"/>
+                            <field name="subsection_id"/>
+                            <field name="ka10_id" readonly="1"/>
                         </group>
                     </group>
                 </sheet>
@@ -79,64 +98,73 @@
         <field name="res_model">pkat.cost.center</field>
         <field name="view_mode">list,form</field>
     </record>
+
+    <!-- ===== Perkiraan (account.account, hanya pkat_managed) ===== -->
     <record id="view_pkat_account_list" model="ir.ui.view">
         <field name="name">view.pkat.account.list</field>
-        <field name="model">pkat.account</field>
+        <field name="model">account.account</field>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
-            <list decoration-warning="needs_completion">
+            <list create="0" delete="0" decoration-warning="pkat_needs_completion" decoration-muted="pkat_is_view">
                 <field name="code"/>
                 <field name="name"/>
-                <field name="cost_center_id"/>
-                <field name="department_id"/>
-                <field name="cost_item"/>
-                <field name="wage_type"/>
-                <field name="kind"/>
-                <field name="is_spt"/>
-                <field name="needs_completion" optional="show"/>
-                <field name="company_id"/>
+                <field name="pkat_cost_center_id"/>
+                <field name="pkat_department_id"/>
+                <field name="pkat_cost_item"/>
+                <field name="pkat_wage_type"/>
+                <field name="pkat_kind"/>
+                <field name="pkat_is_spt"/>
+                <field name="pkat_is_view" optional="show"/>
+                <field name="pkat_needs_completion" optional="show"/>
+                <field name="pkat_company_id"/>
             </list>
         </field>
     </record>
     <record id="view_pkat_account_search" model="ir.ui.view">
         <field name="name">view.pkat.account.search</field>
-        <field name="model">pkat.account</field>
+        <field name="model">account.account</field>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
             <search>
-                <field name="code"/>
-                <field name="name"/>
-                <field name="cost_center_id"/>
-                <field name="department_id"/>
+                <field name="name" filter_domain="['|', ('code', 'ilike', self), ('name', 'ilike', self)]" string="Perkiraan"/>
+                <field name="pkat_cost_center_id"/>
+                <field name="pkat_department_id"/>
                 <!-- FS-PK-09 -->
-                <filter name="needs_completion" string="Perlu Dilengkapi" domain="[('needs_completion', '=', True)]"/>
+                <filter name="needs_completion" string="Perlu Dilengkapi" domain="[('pkat_needs_completion', '=', True)]"/>
+                <filter name="detail" string="Detail" domain="[('pkat_is_view', '=', False)]"/>
+                <filter name="view" string="Induk" domain="[('pkat_is_view', '=', True)]"/>
                 <filter name="inactive" string="Diarsipkan" domain="[('active', '=', False)]"/>
             </search>
         </field>
     </record>
     <record id="view_pkat_account_form" model="ir.ui.view">
         <field name="name">view.pkat.account.form</field>
-        <field name="model">pkat.account</field>
+        <field name="model">account.account</field>
+        <field name="priority">99</field>
         <field name="arch" type="xml">
-            <form>
+            <form create="0" delete="0">
                 <sheet>
-                    <div class="alert alert-warning" role="alert" invisible="not needs_completion">
+                    <div class="alert alert-warning" role="alert" invisible="not pkat_needs_completion">
                         Perkiraan ini belum punya stasiun atau bagian. Lengkapi dahulu agar dapat dianggarkan.
                     </div>
-                    <field name="needs_completion" invisible="1"/>
+                    <field name="pkat_needs_completion" invisible="1"/>
                     <group>
-                        <group>
-                            <field name="code"/>
-                            <field name="name"/>
-                            <field name="company_id"/>
-                            <field name="cost_center_id"/>
-                            <field name="department_id"/>
-                            <field name="cost_item"/>
+                        <group string="Dari Odoo 10 (baca saja)">
+                            <field name="code" readonly="1"/>
+                            <field name="name" readonly="1"/>
+                            <field name="pkat_company_id"/>
+                            <field name="parent_id" readonly="1"/>
+                            <field name="pkat_is_view" readonly="1"/>
+                            <field name="ka10_id" readonly="1"/>
                         </group>
-                        <group>
-                            <field name="wage_type"/>
-                            <field name="kind"/>
-                            <field name="unit_pocket"/>
-                            <field name="is_spt"/>
-                            <field name="active"/>
+                        <group string="PKAT">
+                            <field name="pkat_cost_center_id"/>
+                            <field name="pkat_department_id"/>
+                            <field name="pkat_cost_item"/>
+                            <field name="pkat_wage_type"/>
+                            <field name="pkat_kind"/>
+                            <field name="pkat_unit_pocket"/>
+                            <field name="pkat_is_spt"/>
                         </group>
                     </group>
                 </sheet>
@@ -145,7 +173,12 @@
     </record>
     <record id="action_pkat_account" model="ir.actions.act_window">
         <field name="name">Perkiraan</field>
-        <field name="res_model">pkat.account</field>
+        <field name="res_model">account.account</field>
         <field name="view_mode">list,form</field>
+        <field name="domain">[('pkat_managed', '=', True)]</field>
+        <field name="search_view_id" ref="view_pkat_account_search"/>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_pkat_account_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_pkat_account_form')})]"/>
     </record>
 </odoo>

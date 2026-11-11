@@ -44,7 +44,7 @@ class TestImport(PkatCase):
             months if months is not None else rata(total))
 
     def _wizard(self, rows, user=None, **kw):
-        return self.env['pkat.budget.import'].with_user(user or self.user_kd).create({
+        return self.env['pkat.budget.import'].with_user(user or self.user_kd).with_context(allowed_company_ids=self.company.ids).create({
             'company_id': self.company.id, 'file': self._xlsx(rows, **kw), 'filename': 'pkat.xlsx'})
 
     def _budget(self, cc, year=None):
@@ -85,10 +85,10 @@ class TestImport(PkatCase):
             self._wizard([self._row('25', '50250040', goods=JT)], user=self.user_tuk)
         wiz = self._wizard([self._row('25', '50250040', goods=JT)])
         with self.assertRaises(AccessError):
-            wiz.with_user(self.user_tuk).action_import()
+            wiz.with_user(self.user_tuk).with_context(allowed_company_ids=self.company.ids).action_import()
 
     def test_template_sesuai_kolom(self):
-        wiz = self.env['pkat.budget.import'].with_user(self.user_kd).create(
+        wiz = self.env['pkat.budget.import'].with_user(self.user_kd).with_context(allowed_company_ids=self.company.ids).create(
             {'company_id': self.company.id})
         action = wiz.action_download_template()
         self.assertIn('/web/content/pkat.budget.import/%s/template_file/' % wiz.id, action['url'])
@@ -105,7 +105,7 @@ class TestImport(PkatCase):
             wiz.action_import()
 
     def test_bukan_excel(self):
-        wiz = self.env['pkat.budget.import'].with_user(self.user_kd).create({
+        wiz = self.env['pkat.budget.import'].with_user(self.user_kd).with_context(allowed_company_ids=self.company.ids).create({
             'company_id': self.company.id, 'file': base64.b64encode(b'bukan excel').decode()})
         with self.assertRaises(UserError):
             wiz.action_import()
@@ -144,10 +144,8 @@ class TestImport(PkatCase):
     def test_perkiraan_unit_lain_ditolak(self):
         cc_b = self.env['pkat.cost.center'].create({
             'code': '25', 'name': 'St. Masakan B', 'company_id': self.company_b.id,
-            'department_id': self.env['pkat.department'].create(
-                {'code': 'PAB', 'name': 'Pabrikasi B', 'company_id': self.company_b.id}).id})
-        self.env['pkat.account'].create(
-            {'code': '50250099', 'name': 'Milik unit B', 'company_id': self.company_b.id})
+            'department_id': self._department('PAB', 'Pabrikasi B', company=self.company_b).id})
+        self._account('50250099', 'Milik unit B', company=self.company_b)
         _wiz, alasan = self._gagal([self._row('25', '50250099', goods=JT)])
         self.assertIn('Perkiraan 50250099 tidak terdaftar', alasan[0])
         self.assertFalse(self._budget(cc_b))
@@ -205,7 +203,7 @@ class TestImport(PkatCase):
             sheet.cell(row=3, column=col).value = JT / 12.0
         buf = io.BytesIO()
         book.save(buf)
-        ulang = self.env['pkat.budget.import'].with_user(self.user_kd).create({
+        ulang = self.env['pkat.budget.import'].with_user(self.user_kd).with_context(allowed_company_ids=self.company.ids).create({
             'company_id': self.company.id, 'file': base64.b64encode(buf.getvalue()).decode()})
         ulang.action_import()
         self.assertEqual((ulang.imported_count, ulang.failed_count), (2, 0))

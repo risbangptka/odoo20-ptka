@@ -156,8 +156,8 @@ class PkatBudgetImport(models.TransientModel):
         company = self.company_id
         centers = {c.code: c for c in self.env['pkat.cost.center'].with_context(active_test=False).search(
             [('company_id', '=', company.id), ('code', 'in', list({r['cost_center_code'] for r in rows}))])}
-        accounts = {a.code: a for a in self.env['pkat.account'].with_context(active_test=False).search(
-            [('company_id', '=', company.id), ('code', 'in', list({r['account_code'] for r in rows}))])}
+        accounts = self.env['account.account']._pkat_find(  # K1: perkiraan = account.account
+            company, {r['account_code'] for r in rows}, active_test=False)
         for row in rows:
             for key, found, label in (
                     ('cost_center', centers.get(row['cost_center_code']), _("Stasiun")),
@@ -176,13 +176,14 @@ class PkatBudgetImport(models.TransientModel):
         seen = {}
         for row in rows:
             account, center = row['account'], row['cost_center']
-            if account and account.needs_completion:
+            if account and (account.pkat_is_view or account.pkat_needs_completion):
                 row['errors'].append(_(
-                    "Perkiraan %s belum punya stasiun/bagian di master (FS-PK-09).", account.code))
-            elif account and center and account.cost_center_id != center:
+                    "Perkiraan %s adalah perkiraan induk atau belum punya stasiun/bagian di master "
+                    "(K8, FS-PK-09).", row['account_code']))
+            elif account and center and account.pkat_cost_center_id != center:
                 row['errors'].append(_(
                     "Perkiraan %(acc)s bukan milik stasiun %(cc)s (stasiun perkiraan: %(own)s).",
-                    acc=account.code, cc=center.code, own=account.cost_center_id.code))
+                    acc=row['account_code'], cc=center.code, own=account.pkat_cost_center_id.code))
             key = (row['year'], row['account_code'])
             if key in seen:
                 row['errors'].append(_(
