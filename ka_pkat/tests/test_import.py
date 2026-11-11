@@ -54,9 +54,9 @@ class TestImport(PkatCase):
     # ------------------------------------------------------------ FS-PK-01
     def test_impor_berhasil(self):
         wiz = self._wizard([
-            self._row('25', '50250040', goods=60 * JT, nongoods=40 * JT),
-            self._row('25', '50250001', wage=24 * JT),
-            self._row('31', 50310040, goods=12 * JT),  # kode perkiraan sebagai angka Excel
+            self._row('5025', '5025.240', goods=60 * JT, nongoods=40 * JT),
+            self._row('5025', '5025.201', wage=24 * JT),
+            self._row('5031', '5031.240', goods=12 * JT),  # kode perkiraan sebagai angka Excel
         ])
         wiz.action_import()
         self.assertEqual(wiz.state, 'done')
@@ -74,16 +74,16 @@ class TestImport(PkatCase):
         self.assertEqual(self._budget(self.cc_ketel).amount_current, 12 * JT)
 
     def test_impor_ulang_mengganti_draft(self):
-        self._wizard([self._row('25', '50250040', goods=60 * JT)]).action_import()
-        self._wizard([self._row('25', '50250001', wage=10 * JT)]).action_import()
+        self._wizard([self._row('5025', '5025.240', goods=60 * JT)]).action_import()
+        self._wizard([self._row('5025', '5025.201', wage=10 * JT)]).action_import()
         masak = self._budget(self.cc_masak)
         self.assertEqual(len(masak), 1)
         self.assertEqual(masak.line_ids.account_id, self.acc_masak_upah)
 
     def test_hanya_anggaran_kd(self):
         with self.assertRaises(AccessError):
-            self._wizard([self._row('25', '50250040', goods=JT)], user=self.user_tuk)
-        wiz = self._wizard([self._row('25', '50250040', goods=JT)])
+            self._wizard([self._row('5025', '5025.240', goods=JT)], user=self.user_tuk)
+        wiz = self._wizard([self._row('5025', '5025.240', goods=JT)])
         with self.assertRaises(AccessError):
             wiz.with_user(self.user_tuk).with_context(allowed_company_ids=self.company.ids).action_import()
 
@@ -100,7 +100,7 @@ class TestImport(PkatCase):
             wiz.action_import()
 
     def test_judul_kolom_salah(self):
-        wiz = self._wizard([self._row('25', '50250040', goods=JT)], headers=HEADERS[1:] + HEADERS[:1])
+        wiz = self._wizard([self._row('5025', '5025.240', goods=JT)], headers=HEADERS[1:] + HEADERS[:1])
         with self.assertRaises(UserError):
             wiz.action_import()
 
@@ -127,33 +127,33 @@ class TestImport(PkatCase):
     def test_stasiun_dan_perkiraan_harus_terdaftar_dan_aktif(self):
         self.acc_putar_brg.active = False
         wiz, alasan = self._gagal([
-            self._row('77', '50250040', goods=JT),
-            self._row('25', '50259999', goods=JT),
-            self._row('26', '50260040', goods=JT),
+            self._row('5077', '5025.240', goods=JT),
+            self._row('5025', '5025.299', goods=JT),
+            self._row('5026', '5026.240', goods=JT),
         ])
         self.assertEqual((wiz.imported_count, wiz.failed_count), (0, 3))
-        self.assertIn('Stasiun 77 tidak terdaftar', alasan[0])
-        self.assertIn('Perkiraan 50259999 tidak terdaftar', alasan[1])
-        self.assertIn('Perkiraan 50260040 tidak aktif', alasan[2])
+        self.assertIn('Stasiun 5077 tidak terdaftar', alasan[0])
+        self.assertIn('Perkiraan 5025.299 tidak terdaftar', alasan[1])
+        self.assertIn('Perkiraan 5026.240 tidak aktif', alasan[2])
         self.assertFalse(self.env['pkat.budget'].search([('company_id', '=', self.company.id)]))
 
     def test_perkiraan_harus_milik_stasiun(self):
-        _wiz, alasan = self._gagal([self._row('26', '50250040', goods=JT)])
-        self.assertIn('bukan milik stasiun 26', alasan[0])
+        _wiz, alasan = self._gagal([self._row('5026', '5025.240', goods=JT)])
+        self.assertIn('bukan milik stasiun 5026', alasan[0])
 
     def test_perkiraan_unit_lain_ditolak(self):
         cc_b = self.env['pkat.cost.center'].create({
-            'code': '25', 'name': 'St. Masakan B', 'company_id': self.company_b.id,
+            'code': '5025', 'name': 'St. Masakan B', 'company_id': self.company_b.id,
             'department_id': self._department('PAB', 'Pabrikasi B', company=self.company_b).id})
-        self._account('50250099', 'Milik unit B', company=self.company_b)
-        _wiz, alasan = self._gagal([self._row('25', '50250099', goods=JT)])
-        self.assertIn('Perkiraan 50250099 tidak terdaftar', alasan[0])
+        self._account('5025.298', 'Milik unit B', company=self.company_b)
+        _wiz, alasan = self._gagal([self._row('5025', '5025.298', goods=JT)])
+        self.assertIn('Perkiraan 5025.298 tidak terdaftar', alasan[0])
         self.assertFalse(self._budget(cc_b))
 
     def test_duplikat(self):
         _wiz, alasan = self._gagal([
-            self._row('25', '50250040', goods=JT),
-            self._row('25', '50250040', goods=2 * JT),
+            self._row('5025', '5025.240', goods=JT),
+            self._row('5025', '5025.240', goods=2 * JT),
         ])
         self.assertIn('Tidak diimpor karena baris lain', alasan[0])
         self.assertIn('Duplikat', alasan[1])
@@ -161,8 +161,8 @@ class TestImport(PkatCase):
 
     def test_nilai_negatif_dan_bukan_angka(self):
         _wiz, alasan = self._gagal([
-            self._row('25', '50250040', goods=-12 * JT),
-            [self.year, '25', '50250001', 0.0, 0.0, 'dua belas juta', 0.0] + [0.0] * 12,
+            self._row('5025', '5025.240', goods=-12 * JT),
+            [self.year, '5025', '5025.201', 0.0, 0.0, 'dua belas juta', 0.0] + [0.0] * 12,
         ])
         self.assertIn('negatif', alasan[0])
         self.assertIn('Kolom Tenaga Kerja bukan angka', alasan[1])
@@ -170,22 +170,22 @@ class TestImport(PkatCase):
     def test_total_bulanan_harus_sama_dengan_komponen(self):
         """FS-PK-02: impor MENOLAK baris bila total bulanan != total komponen."""
         _wiz, alasan = self._gagal([
-            self._row('25', '50250040', goods=120 * JT, months=[10 * JT] * 11 + [9 * JT]),
+            self._row('5025', '5025.240', goods=120 * JT, months=[10 * JT] * 11 + [9 * JT]),
         ])
         self.assertIn('Jumlah rencana bulanan', alasan[0])
         self.assertFalse(self._budget(self.cc_masak))
         # selisih pembulatan di bawah 1 sen diterima
-        wiz = self._wizard([self._row('25', '50250040', goods=100 * JT, months=rata(100 * JT))])
+        wiz = self._wizard([self._row('5025', '5025.240', goods=100 * JT, months=rata(100 * JT))])
         wiz.action_import()
         self.assertEqual((wiz.imported_count, wiz.failed_count), (1, 0))
         self.assertFalse(wiz.error_file)
 
     def test_semua_atau_tidak_per_stasiun(self):
         wiz = self._wizard([
-            self._row('25', '50250040', goods=60 * JT),
-            self._row('25', '50250001', wage=-JT),            # gagal -> seluruh St. Masakan batal
-            self._row('31', '50310040', goods=12 * JT),       # St. Ketel tetap masuk
-            self._row('26', '50260040', goods=6 * JT),        # St. Putaran tetap masuk
+            self._row('5025', '5025.240', goods=60 * JT),
+            self._row('5025', '5025.201', wage=-JT),            # gagal -> seluruh St. Masakan batal
+            self._row('5031', '5031.240', goods=12 * JT),       # St. Ketel tetap masuk
+            self._row('5026', '5026.240', goods=6 * JT),        # St. Putaran tetap masuk
         ])
         wiz.action_import()
         self.assertEqual((wiz.imported_count, wiz.failed_count), (2, 2))
@@ -210,17 +210,17 @@ class TestImport(PkatCase):
         self.assertEqual(self._budget(self.cc_masak).amount_current, 61 * JT)
 
     def test_pkat_yang_sudah_diproses_tidak_dapat_diimpor_ulang(self):
-        self._wizard([self._row('25', '50250040', goods=60 * JT)]).action_import()
+        self._wizard([self._row('5025', '5025.240', goods=60 * JT)]).action_import()
         masak = self._budget(self.cc_masak)
         masak.action_proses()
-        _wiz, alasan = self._gagal([self._row('25', '50250040', goods=70 * JT)])
+        _wiz, alasan = self._gagal([self._row('5025', '5025.240', goods=70 * JT)])
         self.assertIn('sudah berstatus Proses', alasan[0])
         self.assertEqual(masak.amount_current, 60 * JT)
 
     def test_tahun_berbeda_dikelompokkan_terpisah(self):
         wiz = self._wizard([
-            self._row('25', '50250040', goods=60 * JT),
-            self._row('25', '50250040', goods=-JT, year=self.year + 1),
+            self._row('5025', '5025.240', goods=60 * JT),
+            self._row('5025', '5025.240', goods=-JT, year=self.year + 1),
         ])
         wiz.action_import()
         self.assertEqual((wiz.imported_count, wiz.failed_count), (1, 1))

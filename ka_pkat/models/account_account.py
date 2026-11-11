@@ -8,6 +8,8 @@ Catatan core Odoo 20: `code` bergantung company (code_store per company root).
 Jangan membaca/mencari `code` dengan company aktif sembarang; pakai _pkat_code()
 dan _pkat_find().
 """
+import re
+
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -18,7 +20,34 @@ UNIT_POCKETS = [
     ('barang_jasa', 'Pemakaian Barang/Jasa'),
     ('bahan_baku_tebu', 'Perolehan Bahan Baku Tebu'),
 ]
-ACCOUNT_CODE_LENGTH = 8
+# K5: kode perkiraan detail berpola NNNN.NNN atau NNNN.NNNN.
+#   karakter 1-4 = stasiun (V2), karakter 6 = kode unit, karakter 7-8 = jenis biaya.
+PKAT_CODE_RE = re.compile(r'^\d{4}\.\d{3,4}$')
+# V10: upah bila jenis biaya 00-07 atau 4 karakter pertama 4001 (aturan Odoo 10, tetapi
+# jenis biaya selalu karakter 7-8, juga untuk kode 9 karakter).
+WAGE_COST_ITEMS = frozenset('%02d' % i for i in range(8))
+WAGE_PREFIXES = frozenset({'4001'})
+
+
+def pkat_station_code(code):
+    """V2: kode stasiun = 4 karakter pertama kode perkiraan."""
+    code = code or ''
+    return code[:4] if PKAT_CODE_RE.match(code) else False
+
+
+def pkat_cost_item(code):
+    """K5: jenis biaya = karakter 7-8 kode perkiraan berpola NNNN.NNN(N)."""
+    code = code or ''
+    return code[6:8] if PKAT_CODE_RE.match(code) else False
+
+
+def pkat_wage_type(code):
+    """V10: upah / non_upah dari kode perkiraan."""
+    code = code or ''
+    if pkat_cost_item(code) in WAGE_COST_ITEMS or code[:4] in WAGE_PREFIXES:
+        return 'upah'
+    return 'non_upah'
+
 # V4: konteks core yang mencegah jurnal otomatis untuk perkiraan kas/bank dan kartu kredit
 # (account.account.create -> _create_default_journals).
 NO_JOURNAL_CONTEXT = {'skip_auto_account_journal_creation': True}
@@ -42,7 +71,9 @@ class AccountAccount(models.Model):
     pkat_cost_center_id = fields.Many2one('pkat.cost.center', 'Stasiun', index=True)
     pkat_department_id = fields.Many2one('hr.department', 'Bagian', index=True)
     pkat_cost_item = fields.Char('Jenis Biaya', size=2, compute='_compute_pkat_cost_item', store=True)
-    pkat_wage_type = fields.Selection(WAGE_TYPES, 'Jenis', default='non_upah')
+    pkat_wage_type = fields.Selection(
+        WAGE_TYPES, 'Jenis', compute='_compute_pkat_cost_item', store=True,
+        help="V10: dihitung dari kode perkiraan (jenis biaya 00-07 atau awalan 4001 = upah).")
     pkat_kind = fields.Selection(ACCOUNT_KINDS, 'Kelompok', default='expense')
     pkat_unit_pocket = fields.Selection(UNIT_POCKETS, 'Kantung Unit')
     pkat_is_spt = fields.Boolean(
@@ -73,7 +104,8 @@ class AccountAccount(models.Model):
     def _compute_pkat_cost_item(self):
         for rec in self:
             code = rec._pkat_code() if rec.pkat_managed else ''
-            rec.pkat_cost_item = code[6:8] if len(code) == ACCOUNT_CODE_LENGTH and code.isdigit() else False
+            rec.pkat_cost_item = pkat_cost_item(code)
+            rec.pkat_wage_type = pkat_wage_type(code) if rec.pkat_managed else False
 
     @api.depends('pkat_managed', 'pkat_is_view', 'pkat_cost_center_id', 'pkat_department_id')
     def _compute_pkat_needs_completion(self):
@@ -112,15 +144,13 @@ class AccountAccount(models.Model):
 
     @api.model
     def _pkat_find_cost_center(self, code, company_id):
-        """Stasiun pemilik nomor perkiraan (DM-02).
-        Odoo 10 (ka_account) menyimpan kode stasiun sebagai 4 digit pertama perkiraan,
-        SRS menyebut digit 3-4; keduanya dicoba, 4 digit pertama didahulukan."""
-        code = code or ''
-        if len(code) != ACCOUNT_CODE_LENGTH or not code.isdigit() or not company_id:
+        """V2: stasiun pemilik perkiraan = stasiun berkode 4 karakter pertama nomor perkiraan
+        (sama dengan ka_account Odoo 10)."""
+        station = pkat_station_code(code)
+        if not station or not company_id:
             return self.env['pkat.cost.center']
-        centers = self.env['pkat.cost.center'].search(
-            [('company_id', '=', company_id), ('code', 'in', [code[:4], code[2:4]])])
-        return (centers.filtered(lambda c: c.code == code[:4]) or centers)[:1]
+        return self.env['pkat.cost.center'].search(
+            [('company_id', '=', company_id), ('code', '=', station)], limit=1)
 
     def _pkat_fill_owner(self):
         """Stasiun diturunkan dari nomor perkiraan dan bagian dari stasiun bila belum diisi."""

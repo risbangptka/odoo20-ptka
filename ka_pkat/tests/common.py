@@ -23,16 +23,16 @@ class PkatCase(TransactionCase):
         cls.dept_ins = cls._department('INS', 'Instalasi')
         cls.seksi_masak = cls._department('PAB-MSK', 'Seksi Masakan', parent_id=cls.dept_pab.id)
         CC = cls.env['pkat.cost.center']
-        cls.cc_masak = CC.create({'code': '25', 'name': 'St. Masakan', 'company_id': cls.company.id,
+        cls.cc_masak = CC.create({'code': '5025', 'name': 'St. Masakan', 'company_id': cls.company.id,
                                   'department_id': cls.dept_pab.id, 'section_id': cls.seksi_masak.id})
-        cls.cc_putar = CC.create({'code': '26', 'name': 'St. Putaran', 'company_id': cls.company.id,
+        cls.cc_putar = CC.create({'code': '5026', 'name': 'St. Putaran', 'company_id': cls.company.id,
                                   'department_id': cls.dept_pab.id})
-        cls.cc_ketel = CC.create({'code': '31', 'name': 'St. Ketel', 'company_id': cls.company.id,
+        cls.cc_ketel = CC.create({'code': '5031', 'name': 'St. Ketel', 'company_id': cls.company.id,
                                   'department_id': cls.dept_ins.id})
-        cls.acc_masak_brg = cls._account('50250040', 'Bahan Pembantu Masakan')
-        cls.acc_masak_upah = cls._account('50250001', 'Upah Masakan', pkat_wage_type='upah')
-        cls.acc_putar_brg = cls._account('50260040', 'Bahan Pembantu Putaran')
-        cls.acc_ketel_brg = cls._account('50310040', 'Bahan Pembantu Ketel')
+        cls.acc_masak_brg = cls._account('5025.240', 'Bahan Pembantu Masakan')
+        cls.acc_masak_upah = cls._account('5025.201', 'Upah Masakan')
+        cls.acc_putar_brg = cls._account('5026.240', 'Bahan Pembantu Putaran')
+        cls.acc_ketel_brg = cls._account('5031.240', 'Bahan Pembantu Ketel')
 
     @classmethod
     def _department(cls, code, name, company=None, **kw):
