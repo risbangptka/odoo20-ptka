@@ -2,7 +2,7 @@ import hashlib
 import secrets
 
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 POCKET_LEVELS = [
     ('account', 'Perkiraan'),
@@ -59,10 +59,19 @@ class PkatConfig(models.Model):
         return config
 
     def write(self, vals):
+        """DM-01: tingkat kantung dan dasar penguncian hanya boleh diubah Bagian Anggaran KD.
+        Perubahan tercatat di chatter (tracking). Kantung dibangun ulang hanya bila
+        pocket_level berubah; lock_basis tidak mengubah susunan kantung."""
+        if ({'pocket_level', 'lock_basis'} & set(vals) and not self.env.su
+                and not self.env.user.has_group('ka_pkat.group_pkat_anggaran_kd')):
+            raise AccessError(_(
+                "Tingkat kantung dan dasar penguncian hanya dapat diubah "
+                "Bagian Anggaran Kantor Direksi."))
+        level_changed = self.filtered(
+            lambda c: 'pocket_level' in vals and c.pocket_level != vals['pocket_level'])
         res = super().write(vals)
-        if {'pocket_level', 'lock_basis'} & set(vals):
-            # TODO(SRS DM-01): bangun ulang pkat.pocket untuk company+tahun ini.
-            self.env['pkat.pocket']._rebuild_for_configs(self)
+        if level_changed:
+            self.env['pkat.pocket']._rebuild_for_configs(level_changed)
         return res
 
 
